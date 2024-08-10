@@ -5,11 +5,13 @@ type(
 		Mp3128 string `json:"mp3-128"`
 	}
 
-	TrackInfo []struct {
+	TrackInfo struct {
 		File File `json:"file"`
 		TrackNum int    `json:"track_num"`
 		TrackID  int    `json:"track_id"`
 		Title    string `json:"title"`
+		Duration          float64     `json:"duration"`
+		HasLyrics         bool        `json:"has_lyrics"`  
 		Lyrics            string      `json:"lyrics"`
 	}
 
@@ -23,11 +25,12 @@ type(
 
 	TrackData struct {
 		Current Current `json:"current"`
-		TrackInfo TrackInfo `json:"trackinfo"`
+		TrackInfo []TrackInfo `json:"trackinfo"`
 		ItemType                   string      `json:"item_type"`     
 		Artist               string `json:"artist"`
 		AlbumReleaseDate     string `json:"album_release_date"`
 		ArtID                int    `json:"art_id"`
+		ArtworkURL string
 		AlbumArtworkFilepath string
 		CurrentTrackTitle    string
 		CurrentTrackURL      string
