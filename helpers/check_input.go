@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -27,7 +28,7 @@ func Remove(text, char string) string {
 }
 
 func GetValidName(input string) string {
-	return strings.ToLower(Remove(RemoveSpaces(input), " "))
+	return ToLower(Remove(RemoveSpaces(input), " "))
 }
 
 func GetKind(text string) string {
@@ -36,4 +37,22 @@ func GetKind(text string) string {
 	parts := strings.Split(trimmed, "/")
 
 	return parts[0]
+}
+
+func ToLower(text string) string {
+	return strings.ToLower(text)
+}
+
+func GetByNumber[T any](number string, data []T) *T {
+	var specificData *T
+
+	for k, v := range data {
+		k++
+		if number == strconv.Itoa(k) {
+			specificData = &v
+			break
+		}
+	}
+
+	return specificData
 }
