@@ -2,6 +2,7 @@ package scrap
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 
@@ -38,12 +39,22 @@ func (s *dataScrapper) ListInfos(reader io.Reader) (*entities.TrackData, error) 
 		if jsonUnmarshalError != nil {
 			listInfoError = jsonUnmarshalError
 		}
-
 	})
 
 	if listInfoError != nil {
 		return nil, listInfoError
 	}
+
+	var artwork string
+	switch trackData.ItemType {
+	case "track":
+		artwork = fmt.Sprintf("https://f4.bcbits.com/img/a%d_10.jpg", trackData.ArtID)
+	case "album":
+		artwork = fmt.Sprintf("https://f4.bcbits.com/img/a%d_16.jpg", trackData.Current.ArtID)
+	default:
+		return nil,fmt.Errorf("error get image:%d", trackData.Current.ID)
+	}
+	trackData.ArtworkURL = artwork
 
 	return trackData, nil
 }

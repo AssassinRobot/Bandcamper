@@ -45,16 +45,6 @@ func (c *urlDownloader) Download(url string) error {
 
 	baseFilepath := fmt.Sprintf("./%s%s", helpers.RemoveAlphaNum(trackData.Artist), helpers.RemoveAlphaNum(trackData.Current.Title))
 
-	var artwork string
-	switch trackData.ItemType {
-	case "track":
-		artwork = fmt.Sprintf("https://f4.bcbits.com/img/a%d_10.jpg", trackData.ArtID)
-	case "album":
-		artwork = fmt.Sprintf("https://f4.bcbits.com/img/a%d_16.jpg", trackData.Current.ArtID)
-	default:
-		return fmt.Errorf("error get image:%d", trackData.Current.ID)
-	}
-
 	trackData.AlbumArtworkFilepath = fmt.Sprintf("%s/%s.jpg", baseFilepath, trackData.Current.Title)
 
 	createError := c.file.CreateDir(baseFilepath)
@@ -62,7 +52,7 @@ func (c *urlDownloader) Download(url string) error {
 		return createError
 	}
 
-	imageRes, getImageError := c.http.Get(artwork)
+	imageRes, getImageError := c.http.Get(trackData.ArtworkURL)
 	if getImageError != nil {
 		return getImageError
 	}
