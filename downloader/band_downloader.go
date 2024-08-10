@@ -39,15 +39,35 @@ func (c *bandDownloader) GetBand(name string) (*entities.Band, error) {
 	return bandData, nil
 }
 
-func (c *bandDownloader) GetAlbum(albumNumber string) (*entities.TrackData, error) {
+func (c *bandDownloader) GetAlbum(albumURL string) (*entities.TrackData, error) {
+	res, getURLError := c.http.Get(albumURL)
+	if getURLError != nil {
+		return nil, getURLError
+	}
+
+	defer func() {
+		err := res.Body.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	data, scrapError := c.bandScrapper.ListInfos(res.Body)
+	if scrapError != nil {
+		return nil, scrapError
+	}
+
+	return data, nil
+}
+func (c *bandDownloader) GetTrack(trackURL string) (*entities.TrackData, error) {
 	panic("uninplemented")
 }
 
-func (c *bandDownloader) DownloadAlbum(albumNumber string) error {
+func (c *bandDownloader) DownloadAlbum(albumURL string) error {
 	panic("uninplemented")
 }
 
-func (c *bandDownloader) DownloadTrack(trackNumber string) error {
+func (c *bandDownloader) DownloadTrack(trackURL string) error {
 	panic("uninplemented")
 }
 

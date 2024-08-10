@@ -4,9 +4,10 @@ import "github.com/AssassinRobot/Bandcamper/entities"
 
 type BandDownloader interface {
 	GetBand(name string) (*entities.Band, error)
-	GetAlbum(albumNumber string) (*entities.TrackData, error)
-	DownloadAlbum(albumNumber string) error
-	DownloadTrack(trackNumber string) error
+	GetAlbum(albumURL string) (*entities.TrackData, error)
+	GetTrack(trackURL string) (*entities.TrackData, error)
+	DownloadAlbum(albumURL string) error
+	DownloadTrack(trackURL string) error
 }
 
 type URLDownloader interface {
