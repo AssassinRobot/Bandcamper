@@ -1,6 +1,8 @@
 package helpers
 
 import (
+	"fmt"
+	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -55,4 +57,15 @@ func GetByNumber[T any](number string, data []T) *T {
 	}
 
 	return specificData
+}
+
+func GetSpecificTrackURL(basePath,trackTitle string)string{
+	trackURL := fmt.Sprintf("https://%s%s",basePath,trackTitle)
+	log.Println(trackURL)
+	return trackURL
+
+}
+
+func GetBasePath(url string)string{
+	return strings.Split(url,"/")[2]
 }

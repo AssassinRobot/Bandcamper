@@ -10,6 +10,7 @@ type(
 		TrackNum int    `json:"track_num"`
 		TrackID  int    `json:"track_id"`
 		Title    string `json:"title"`
+		TitleLink         string      `json:"title_link"`
 		Duration          float64     `json:"duration"`
 		HasLyrics         bool        `json:"has_lyrics"`  
 		Lyrics            string      `json:"lyrics"`
@@ -31,6 +32,7 @@ type(
 		About string `json:"about"`
 		AlbumReleaseDate     string `json:"album_release_date"`
 		ArtID                int    `json:"art_id"`
+		BasePath string
 		ArtworkURL string
 		AlbumArtworkFilepath string
 		CurrentTrackTitle    string

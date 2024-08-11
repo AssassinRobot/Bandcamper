@@ -69,7 +69,7 @@ var bandCmd = &cobra.Command{
 
 			switch helpers.ToLower(input) {
 			case "c":
-				fmt.Print("\nDo you want to download (a album or single) or get info (album/single)? (d/i/q): ")
+				fmt.Print("\nDo you want to download (album/single) or get info (album/single)? (d/i/q): ")
 				fmt.Scanln(&input)
 
 				switch helpers.ToLower(input) {
@@ -176,7 +176,7 @@ var bandCmd = &cobra.Command{
 								os.Exit(1)
 							}
 
-							err := bandDownloader.DownloadTrack(track.File.Mp3128)
+							err := bandDownloader.DownloadTrack(helpers.GetSpecificTrackURL(albumData.BasePath,track.TitleLink))
 							if err != nil {
 								fmt.Println("Error download track:", err)
 								os.Exit(1)

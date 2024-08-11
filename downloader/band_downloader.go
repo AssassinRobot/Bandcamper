@@ -58,6 +58,7 @@ func (c *bandDownloader) GetAlbum(albumURL string) (*entities.TrackData, error) 
 		return nil, scrapError
 	}
 
+	data.BasePath = helpers.GetBasePath(albumURL)
 	return data, nil
 }
 func (c *bandDownloader) GetTrack(trackURL string) (*entities.TrackData, error) {
@@ -77,6 +78,8 @@ func (c *bandDownloader) GetTrack(trackURL string) (*entities.TrackData, error) 
 	if scrapError != nil {
 		return nil, scrapError
 	}
+	data.BasePath = helpers.GetBasePath(trackURL)
+	log.Println(data.BasePath )
 
 	return data, nil
 }
