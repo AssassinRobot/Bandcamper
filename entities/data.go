@@ -28,6 +28,7 @@ type(
 		TrackInfo []TrackInfo `json:"trackinfo"`
 		ItemType                   string      `json:"item_type"`     
 		Artist               string `json:"artist"`
+		About string `json:"about"`
 		AlbumReleaseDate     string `json:"album_release_date"`
 		ArtID                int    `json:"art_id"`
 		ArtworkURL string

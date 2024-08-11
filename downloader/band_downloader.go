@@ -14,6 +14,7 @@ type bandDownloader struct {
 	http         *utils.HttpMngmnt
 	file         *utils.FileMngmnt
 	bandScrapper scrap.BandScrapper
+	URLDownloader
 }
 
 func (c *bandDownloader) GetBand(name string) (*entities.Band, error) {
@@ -60,21 +61,47 @@ func (c *bandDownloader) GetAlbum(albumURL string) (*entities.TrackData, error) 
 	return data, nil
 }
 func (c *bandDownloader) GetTrack(trackURL string) (*entities.TrackData, error) {
-	panic("uninplemented")
+	res, getURLError := c.http.Get(trackURL)
+	if getURLError != nil {
+		return nil, getURLError
+	}
+
+	defer func() {
+		err := res.Body.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	data, scrapError := c.bandScrapper.ListInfos(res.Body)
+	if scrapError != nil {
+		return nil, scrapError
+	}
+
+	return data, nil
 }
 
 func (c *bandDownloader) DownloadAlbum(albumURL string) error {
-	panic("uninplemented")
+	err := c.URLDownloader.Download(albumURL)
+	if err != nil{
+		return err
+	}
+	return nil
 }
 
 func (c *bandDownloader) DownloadTrack(trackURL string) error {
-	panic("uninplemented")
+	err := c.URLDownloader.Download(trackURL)
+	if err != nil{
+		return err
+	}
+	return nil
 }
 
-func NewBandDownloader(http *utils.HttpMngmnt, file *utils.FileMngmnt, bandScrapper scrap.BandScrapper) BandDownloader {
+func NewBandDownloader(http *utils.HttpMngmnt, file *utils.FileMngmnt, bandScrapper scrap.BandScrapper,downloader URLDownloader) BandDownloader {
 	return &bandDownloader{
 		http:         http,
 		file:         file,
 		bandScrapper: bandScrapper,
+		URLDownloader: downloader,
 	}
 }

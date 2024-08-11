@@ -23,8 +23,8 @@ func init() {
 	generalScrapper := scrap.NewScrapper()
 	bandScrapper := scrap.NewBandScrapper(generalScrapper)
 
-	bandDownloader = downloader.NewBandDownloader(bandHttp, bandFile, bandScrapper)
-
+	generalDownloader := downloader.NewURLDownloader(bandHttp, bandFile, generalScrapper)
+	bandDownloader = downloader.NewBandDownloader(bandHttp, bandFile, bandScrapper, generalDownloader)
 }
 
 var bandCmd = &cobra.Command{
@@ -204,7 +204,16 @@ var bandCmd = &cobra.Command{
 							os.Exit(1)
 						}
 
-						fmt.Println(data)
+						fmt.Println("Title: ", data.Current.Title)
+						fmt.Println("Artist: ", data.Artist)
+						fmt.Println("About: ",data.About)
+						fmt.Println("Release Date: ", data.Current.ReleaseDate)
+						for _, v := range data.TrackInfo {
+							fmt.Printf("\tDuration: %.2f\n", v.Duration/60)
+							fmt.Println("\tAudio url: ", v.File.Mp3128)
+							fmt.Println("\tHas Lyrics: ", v.HasLyrics)
+							fmt.Println("_____________________")
+						}
 
 						fmt.Print("\nDo you want download it? (y/n/q): ")
 						fmt.Scanln(&input)
