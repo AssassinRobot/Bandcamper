@@ -13,3 +13,7 @@ type BandDownloader interface {
 type URLDownloader interface {
 	Download(url string) error
 }
+
+type WishlistDownloader interface {
+	Download(username string) error
+}

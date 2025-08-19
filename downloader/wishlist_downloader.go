@@ -1,0 +1,132 @@
+package downloader
+
+import (
+	"fmt"
+	"github.com/AssassinRobot/Bandcamper/entities"
+	"github.com/AssassinRobot/Bandcamper/helpers"
+	"github.com/AssassinRobot/Bandcamper/pkg/scrap"
+	"github.com/AssassinRobot/Bandcamper/utils"
+	"log"
+	"strconv"
+)
+
+type wishlistDownloader struct {
+	http      *utils.HttpMngmnt
+	file      *utils.FileMngmnt
+	downloads []string
+	scrapper  scrap.Scrapper
+}
+
+// var wg = &sync.WaitGroup{}
+
+func (c *wishlistDownloader) Download(username string) error {
+	var errorChan = make(chan error, 500)
+
+	var wishlistUrl = fmt.Sprintf("https://bandcamp.com/%s/wishlist", username)
+	res, getURLError := c.http.Get(wishlistUrl)
+	if getURLError != nil {
+		return getURLError
+	}
+
+	defer func() {
+		err := res.Body.Close()
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}()
+
+	trackData, scrapError := c.scrapper.ListInfos(res.Body)
+	if scrapError != nil {
+		return scrapError
+	}
+
+	ticker := helpers.DownloadStatus(&c.downloads)
+
+	baseFilepath := fmt.Sprintf("./%s%s", helpers.RemoveAlphaNum(trackData.Artist), helpers.RemoveAlphaNum(trackData.Current.Title))
+
+	trackData.AlbumArtworkFilepath = fmt.Sprintf("%s/%s.jpg", baseFilepath, trackData.Current.Title)
+
+	createError := c.file.CreateDir(baseFilepath)
+	if createError != nil {
+		return createError
+	}
+
+	imageRes, getImageError := c.http.Get(trackData.ArtworkURL)
+	if getImageError != nil {
+		return getImageError
+	}
+
+	defer func() {
+		err := res.Body.Close()
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}()
+
+	saveImageError := c.file.Save(trackData.AlbumArtworkFilepath, imageRes.Body)
+	if saveImageError != nil {
+		return saveImageError
+	}
+
+	for _, v := range trackData.TrackInfo {
+		wg.Add(1)
+
+		currentTrackData := *trackData
+
+		currentTrackData.CurrentTrackNum = strconv.Itoa(v.TrackNum)
+		currentTrackData.CurrentTrackTitle = v.Title
+		currentTrackData.CurrentTrackURL = v.File.Mp3128
+		currentTrackData.CurrentTrackFilepath = baseFilepath +
+			"/" + helpers.RemoveAlphaNum(currentTrackData.CurrentTrackNum) +
+			"-" + helpers.RemoveAlphaNum(currentTrackData.Artist) +
+			"-" + helpers.RemoveAlphaNum(currentTrackData.CurrentTrackTitle) +
+			".mp3"
+
+		go func(mp3 entities.TrackData) {
+			defer wg.Done()
+
+			c.downloads = append(c.downloads, fmt.Sprintf("%s - %s", mp3.Artist, mp3.CurrentTrackTitle))
+
+			mp3Res, mp3DownloadError := c.http.Get(mp3.CurrentTrackURL)
+			if mp3DownloadError != nil {
+				errorChan <- mp3DownloadError
+				return
+			}
+
+			defer func() {
+				err := mp3Res.Body.Close()
+				if err != nil {
+					log.Fatalln(err)
+				}
+			}()
+
+			saveError := c.file.Save(mp3.CurrentTrackFilepath, mp3Res.Body)
+			if saveError != nil {
+				errorChan <- saveError
+				return
+			}
+
+			tagFileError := c.file.TagFile(&mp3)
+			if tagFileError != nil {
+				errorChan <- tagFileError
+				return
+			}
+		}(currentTrackData)
+	}
+
+	wg.Wait()
+
+	ticker.Stop()
+
+	close(errorChan)
+
+	return <-errorChan
+}
+
+func NewWishlistDownloader(http *utils.HttpMngmnt, file *utils.FileMngmnt, scrapper scrap.Scrapper) WishlistDownloader {
+	return &wishlistDownloader{
+		http:     http,
+		file:     file,
+		scrapper: scrapper,
+	}
+}
