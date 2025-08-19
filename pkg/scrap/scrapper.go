@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 
 	"github.com/AssassinRobot/Bandcamper/entities"
 	"github.com/PuerkitoBio/goquery"
@@ -61,26 +62,38 @@ func (s *dataScrapper) ListInfos(reader io.Reader) (*entities.TrackData, error) 
 }
 
 func (s *dataScrapper) ListWishlist(reader io.Reader) ([]*entities.Album, error) {
-	var listWishlistError error
-
 	doc, newDocError := goquery.NewDocumentFromReader(reader)
 	if newDocError != nil {
-		listWishlistError = newDocError
+		return nil, newDocError
 	}
 
 	var albums []*entities.Album
 
-	doc.Find(".collection-item-container").Each(func(i int, s *goquery.Selection) {
+	var wishlistItems = doc.Find("#wishlist-items-container .collection-items")
+
+	// When user sets the wishlist to private, bandcamp does a rewrite of the page
+	// to the user collection, which cannot be made private.
+
+	if wishlistItems.Length() == 0 {
+		hasCookies := os.Getenv("BANDCAMP_COOKIES") != ""
+		var message string
+
+		if hasCookies {
+			message = "Could not find wishlist using the provided cookies. Please verify that your username and BANDCAMP_COOKIES value are correct and not expired."
+		} else {
+			message = "Could not find a public wishlist. If your wishlist is private, set the BANDCAMP_COOKIES environment variable with your cookies."
+		}
+
+		return nil, fmt.Errorf("error getting wishlist: %s", message)
+	}
+
+	wishlistItems.Each(func(i int, s *goquery.Selection) {
 		var album = &entities.Album{}
 		album.Title = s.Find(".collection-item-title").Text()
 		album.AlbumURL = s.Find(".item-link").AttrOr("href", "")
 		album.ImageURL = s.Find(".collection-item-art").AttrOr("src", "")
 		albums = append(albums, album)
 	})
-
-	if listWishlistError != nil {
-		return nil, listWishlistError
-	}
 
 	return albums, nil
 }

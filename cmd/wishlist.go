@@ -35,8 +35,7 @@ var wishlistCmd = &cobra.Command{
 		if cookieEnv := os.Getenv("BANDCAMP_COOKIES"); cookieEnv != "" {
 			cookies = cookieEnv
 		} else {
-			fmt.Println("Please set the BANDCAMP_COOKIES environment variable with your Bandcamp cookies.")
-			return
+			cookies = ""
 		}
 
 		err := wishlistDownloader.Download(username, cookies)
