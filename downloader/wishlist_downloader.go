@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+
 	// "strconv"
 	//
 	// "github.com/AssassinRobot/Bandcamper/entities"
@@ -27,7 +28,8 @@ func (c *wishlistDownloader) Download(username string) error {
 	var wishlistUrl = fmt.Sprintf("https://bandcamp.com/%s/wishlist", username)
 
 	// TODO: get cookies from Chrome or Firefox
-	var cookies = os.Getenv("BANCAMP_COOKIES")
+	var cookies = os.Getenv("BANDCAMP_COOKIES")
+	println("Using cookies:", cookies)
 	var headers = map[string]string{
 		"Cookie":     cookies,
 		"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
@@ -49,10 +51,20 @@ func (c *wishlistDownloader) Download(username string) error {
 	// Just print the response body for debugging
 	println("Response Status:", res.Status)
 
-	// trackData, scrapError := c.scrapper.ListInfos(res.Body)
-	// if scrapError != nil {
-	// 	return scrapError
-	// }
+	wishlistData, scrapError := c.scrapper.ListWishlist(res.Body)
+	if scrapError != nil {
+		return scrapError
+	}
+
+	// just print wishlist and return
+	for _, item := range wishlistData {
+		fmt.Printf("Wishlist Item: %s", item.Title)
+		fmt.Printf("Album URL: %s\n", item.AlbumURL)
+		fmt.Printf("Artwork URL: %s\n", item.ImageURL)
+		fmt.Println()
+	}
+	return nil
+
 	//
 	// ticker := helpers.DownloadStatus(&c.downloads)
 	//

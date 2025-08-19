@@ -12,6 +12,7 @@ import (
 
 type Scrapper interface {
 	ListInfos(reader io.Reader) (*entities.TrackData, error)
+	ListWishlist(reader io.Reader) ([]*entities.Album, error)
 }
 
 func NewScrapper() Scrapper {
@@ -52,9 +53,34 @@ func (s *dataScrapper) ListInfos(reader io.Reader) (*entities.TrackData, error) 
 	case "album":
 		artwork = fmt.Sprintf("https://f4.bcbits.com/img/a%d_16.jpg", trackData.Current.ArtID)
 	default:
-		return nil,fmt.Errorf("error get image:%d", trackData.Current.ID)
+		return nil, fmt.Errorf("error get image:%d", trackData.Current.ID)
 	}
 	trackData.ArtworkURL = artwork
 
 	return trackData, nil
+}
+
+func (s *dataScrapper) ListWishlist(reader io.Reader) ([]*entities.Album, error) {
+	var listWishlistError error
+
+	doc, newDocError := goquery.NewDocumentFromReader(reader)
+	if newDocError != nil {
+		listWishlistError = newDocError
+	}
+
+	var albums []*entities.Album
+
+	doc.Find(".collection-item-container").Each(func(i int, s *goquery.Selection) {
+		var album = &entities.Album{}
+		album.Title = s.Find(".collection-item-title").Text()
+		album.AlbumURL = s.Find(".item-link").AttrOr("href", "")
+		album.ImageURL = s.Find(".collection-item-art").AttrOr("src", "")
+		albums = append(albums, album)
+	})
+
+	if listWishlistError != nil {
+		return nil, listWishlistError
+	}
+
+	return albums, nil
 }
