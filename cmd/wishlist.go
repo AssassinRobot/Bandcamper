@@ -2,11 +2,13 @@ package cmd
 
 import (
 	"fmt"
+	"log"
+	"os"
+
 	"github.com/AssassinRobot/Bandcamper/downloader"
 	"github.com/AssassinRobot/Bandcamper/pkg/scrap"
 	"github.com/AssassinRobot/Bandcamper/utils"
 	"github.com/spf13/cobra"
-	"log"
 )
 
 var (
@@ -29,7 +31,15 @@ var wishlistCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		username := args[0]
 
-		err := wishlistDownloader.Download(username)
+		var cookies string
+		if cookieEnv := os.Getenv("BANDCAMP_COOKIES"); cookieEnv != "" {
+			cookies = cookieEnv
+		} else {
+			fmt.Println("Please set the BANDCAMP_COOKIES environment variable with your Bandcamp cookies.")
+			return
+		}
+
+		err := wishlistDownloader.Download(username, cookies)
 		if err != nil {
 			fmt.Println(err)
 		}

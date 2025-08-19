@@ -16,5 +16,5 @@ type URLDownloader interface {
 }
 
 type WishlistDownloader interface {
-	Download(username string) error
+	Download(username string, cookies string) error
 }

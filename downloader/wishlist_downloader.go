@@ -3,7 +3,6 @@ package downloader
 import (
 	"fmt"
 	"log"
-	"os"
 
 	// "strconv"
 	//
@@ -22,16 +21,13 @@ type wishlistDownloader struct {
 
 // var wg = &sync.WaitGroup{}
 
-func (c *wishlistDownloader) Download(username string) error {
+func (c *wishlistDownloader) Download(username string, cookies string) error {
 	var errorChan = make(chan error, 500)
 
 	var url = fmt.Sprintf("https://bandcamp.com/%s/wishlist", username)
-	var cookies = os.Getenv("BANDCAMP_COOKIES")
 	var headers = map[string]string{
-		"Cookie":     cookies,
-		"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+		"Cookie": cookies,
 	}
-
 	res, getURLError := c.http.Get(url, headers)
 
 	if getURLError != nil {
