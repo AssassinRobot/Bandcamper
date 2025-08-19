@@ -24,7 +24,7 @@ var wg = &sync.WaitGroup{}
 func (c *urlDownloader) Download(url string) error {
 	var errorChan = make(chan error, 500)
 
-	res, getURLError := c.http.Get(url)
+	res, getURLError := c.http.Get(url, nil)
 	if getURLError != nil {
 		return getURLError
 	}
@@ -52,7 +52,7 @@ func (c *urlDownloader) Download(url string) error {
 		return createError
 	}
 
-	imageRes, getImageError := c.http.Get(trackData.ArtworkURL)
+	imageRes, getImageError := c.http.Get(trackData.ArtworkURL, nil)
 	if getImageError != nil {
 		return getImageError
 	}
@@ -88,7 +88,7 @@ func (c *urlDownloader) Download(url string) error {
 
 			c.downloads = append(c.downloads, fmt.Sprintf("%s - %s", mp3.Artist, mp3.CurrentTrackTitle))
 
-			mp3Res, mp3DownloadError := c.http.Get(mp3.CurrentTrackURL)
+			mp3Res, mp3DownloadError := c.http.Get(mp3.CurrentTrackURL, nil)
 			if mp3DownloadError != nil {
 				errorChan <- mp3DownloadError
 				return
