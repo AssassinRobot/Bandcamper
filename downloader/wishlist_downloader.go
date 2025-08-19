@@ -56,96 +56,15 @@ func (c *wishlistDownloader) Download(username string) error {
 		return scrapError
 	}
 
+	urlDownloader := NewURLDownloader(c.http, c.file, c.scrapper)
+
 	// just print wishlist and return
 	for _, item := range wishlistData {
 		fmt.Printf("Wishlist Item: %s", item.Title)
-		fmt.Printf("Album URL: %s\n", item.AlbumURL)
-		fmt.Printf("Artwork URL: %s\n", item.ImageURL)
-		fmt.Println()
+		urlDownloader.Download(item.AlbumURL)
 	}
-	return nil
-
-	//
-	// ticker := helpers.DownloadStatus(&c.downloads)
-	//
-	// baseFilepath := fmt.Sprintf("./%s%s", helpers.RemoveAlphaNum(trackData.Artist), helpers.RemoveAlphaNum(trackData.Current.Title))
-	//
-	// trackData.AlbumArtworkFilepath = fmt.Sprintf("%s/%s.jpg", baseFilepath, trackData.Current.Title)
-	//
-	// createError := c.file.CreateDir(baseFilepath)
-	// if createError != nil {
-	// 	return createError
-	// }
-	//
-	// imageRes, getImageError := c.http.Get(trackData.ArtworkURL)
-	// if getImageError != nil {
-	// 	return getImageError
-	// }
-	//
-	// defer func() {
-	// 	err := res.Body.Close()
-	// 	if err != nil {
-	// 		log.Fatalln(err)
-	// 	}
-	// }()
-	//
-	// saveImageError := c.file.Save(trackData.AlbumArtworkFilepath, imageRes.Body)
-	// if saveImageError != nil {
-	// 	return saveImageError
-	// }
-	//
-	// for _, v := range trackData.TrackInfo {
-	// 	wg.Add(1)
-	//
-	// 	currentTrackData := *trackData
-	//
-	// 	currentTrackData.CurrentTrackNum = strconv.Itoa(v.TrackNum)
-	// 	currentTrackData.CurrentTrackTitle = v.Title
-	// 	currentTrackData.CurrentTrackURL = v.File.Mp3128
-	// 	currentTrackData.CurrentTrackFilepath = baseFilepath +
-	// 		"/" + helpers.RemoveAlphaNum(currentTrackData.CurrentTrackNum) +
-	// 		"-" + helpers.RemoveAlphaNum(currentTrackData.Artist) +
-	// 		"-" + helpers.RemoveAlphaNum(currentTrackData.CurrentTrackTitle) +
-	// 		".mp3"
-	//
-	// 	go func(mp3 entities.TrackData) {
-	// 		defer wg.Done()
-	//
-	// 		c.downloads = append(c.downloads, fmt.Sprintf("%s - %s", mp3.Artist, mp3.CurrentTrackTitle))
-	//
-	// 		mp3Res, mp3DownloadError := c.http.Get(mp3.CurrentTrackURL)
-	// 		if mp3DownloadError != nil {
-	// 			errorChan <- mp3DownloadError
-	// 			return
-	// 		}
-	//
-	// 		defer func() {
-	// 			err := mp3Res.Body.Close()
-	// 			if err != nil {
-	// 				log.Fatalln(err)
-	// 			}
-	// 		}()
-	//
-	// 		saveError := c.file.Save(mp3.CurrentTrackFilepath, mp3Res.Body)
-	// 		if saveError != nil {
-	// 			errorChan <- saveError
-	// 			return
-	// 		}
-	//
-	// 		tagFileError := c.file.TagFile(&mp3)
-	// 		if tagFileError != nil {
-	// 			errorChan <- tagFileError
-	// 			return
-	// 		}
-	// 	}(currentTrackData)
-	// }
-	//
-	wg.Wait()
-
-	// ticker.Stop()
 
 	close(errorChan)
-
 	return <-errorChan
 }
 
