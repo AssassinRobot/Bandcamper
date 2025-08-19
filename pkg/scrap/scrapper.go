@@ -69,10 +69,11 @@ func (s *dataScrapper) ListWishlist(reader io.Reader) ([]*entities.Album, error)
 
 	var albums []*entities.Album
 
-	var wishlistItems = doc.Find("#wishlist-items-container .collection-items")
-
 	// When user sets the wishlist to private, bandcamp does a rewrite of the page
 	// to the user collection, which cannot be made private.
+	// So we will try to find the wishlist items in the collection items container.
+
+	var wishlistItems = doc.Find("#wishlist-items-container .collection-items")
 
 	if wishlistItems.Length() == 0 {
 		hasCookies := os.Getenv("BANDCAMP_COOKIES") != ""

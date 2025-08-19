@@ -4,22 +4,15 @@ import (
 	"fmt"
 	"log"
 
-	// "strconv"
-	//
-	// "github.com/AssassinRobot/Bandcamper/entities"
-	// "github.com/AssassinRobot/Bandcamper/helpers"
 	"github.com/AssassinRobot/Bandcamper/pkg/scrap"
 	"github.com/AssassinRobot/Bandcamper/utils"
 )
 
 type wishlistDownloader struct {
-	http      *utils.HttpMngmnt
-	file      *utils.FileMngmnt
-	downloads []string
-	scrapper  scrap.Scrapper
+	http     *utils.HttpMngmnt
+	file     *utils.FileMngmnt
+	scrapper scrap.Scrapper
 }
-
-// var wg = &sync.WaitGroup{}
 
 func (c *wishlistDownloader) Download(username string, cookies string) error {
 	var errorChan = make(chan error, 500)
