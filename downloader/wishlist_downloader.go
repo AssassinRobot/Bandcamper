@@ -50,16 +50,16 @@ func (c *wishlistDownloader) Download(username string, cookies string) error {
 	}
 
 	// just print wishlist and return
-	var album_urls []string
+	var albumUrls []string
 	for _, item := range wishlistData {
 		fmt.Printf("Wishlist Item: %s", item.Title)
 		if item.AlbumURL != "" {
-			album_urls = append(album_urls, item.AlbumURL)
+			albumUrls = append(albumUrls, item.AlbumURL)
 		}
 	}
 
 	urlDownloader := NewURLDownloader(c.http, c.file, c.scrapper)
-	err := urlDownloader.DownloadAll(album_urls)
+	err := urlDownloader.DownloadAll(albumUrls)
 	if err != nil {
 		log.Fatalf("Error occurred: %v", err)
 	}
