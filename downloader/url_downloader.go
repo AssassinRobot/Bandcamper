@@ -19,9 +19,8 @@ type urlDownloader struct {
 	scrapper  scrap.Scrapper
 }
 
-var downloadWG = &sync.WaitGroup{}
-
 func (c *urlDownloader) Download(url string) error {
+	var wg = &sync.WaitGroup{}
 	var errorChan = make(chan error, 500)
 
 	res, getURLError := c.http.Get(url, nil)
@@ -70,7 +69,7 @@ func (c *urlDownloader) Download(url string) error {
 	}
 
 	for _, v := range trackData.TrackInfo {
-		downloadWG.Add(1)
+		wg.Add(1)
 
 		currentTrackData := *trackData
 
@@ -84,7 +83,7 @@ func (c *urlDownloader) Download(url string) error {
 			".mp3"
 
 		go func(mp3 entities.TrackData) {
-			defer downloadWG.Done()
+			defer wg.Done()
 
 			c.downloads = append(c.downloads, fmt.Sprintf("%s - %s", mp3.Artist, mp3.CurrentTrackTitle))
 
@@ -115,7 +114,7 @@ func (c *urlDownloader) Download(url string) error {
 		}(currentTrackData)
 	}
 
-	downloadWG.Wait()
+	wg.Wait()
 
 	ticker.Stop()
 
@@ -124,18 +123,17 @@ func (c *urlDownloader) Download(url string) error {
 	return <-errorChan
 }
 
-var downloadAllWG = &sync.WaitGroup{}
-
 func (c *urlDownloader) DownloadAll(urls []string) error {
+	var wg = &sync.WaitGroup{}
 	var errorChan = make(chan error, len(urls))
 
 	// Add the number of tasks (URLs) to wait on
-	downloadAllWG.Add(len(urls))
+	wg.Add(len(urls))
 
 	// Loop over URLs and create a goroutine for each URL
 	for _, url := range urls {
 		go func(url string) {
-			defer downloadAllWG.Done()
+			defer wg.Done()
 
 			// Call the Download function for each URL
 			err := c.Download(url)
@@ -146,7 +144,7 @@ func (c *urlDownloader) DownloadAll(urls []string) error {
 	}
 
 	// Wait for all goroutines to finish
-	downloadAllWG.Wait()
+	wg.Wait()
 
 	// Close the error channel and return the first error encountered
 	close(errorChan)
