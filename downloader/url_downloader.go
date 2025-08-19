@@ -124,6 +124,41 @@ func (c *urlDownloader) Download(url string) error {
 	return <-errorChan
 }
 
+func (c *urlDownloader) DownloadAll(urls []string) error {
+	var errorChan = make(chan error, len(urls))
+
+	// Add the number of tasks (URLs) to wait on
+	wg.Add(len(urls))
+
+	// Loop over URLs and create a goroutine for each URL
+	for _, url := range urls {
+		go func(url string) {
+			defer wg.Done()
+
+			// Call the Download function for each URL
+			err := c.Download(url)
+			if err != nil {
+				errorChan <- err
+			}
+		}(url)
+	}
+
+	// Wait for all goroutines to finish
+	wg.Wait()
+
+	// Close the error channel and return the first error encountered
+	close(errorChan)
+
+	// Return the first error from the channel (if any)
+	for err := range errorChan {
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func NewURLDownloader(http *utils.HttpMngmnt, file *utils.FileMngmnt, scrapper scrap.Scrapper) URLDownloader {
 	return &urlDownloader{
 		http:     http,

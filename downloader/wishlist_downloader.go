@@ -25,17 +25,14 @@ type wishlistDownloader struct {
 func (c *wishlistDownloader) Download(username string) error {
 	var errorChan = make(chan error, 500)
 
-	var wishlistUrl = fmt.Sprintf("https://bandcamp.com/%s/wishlist", username)
-
-	// TODO: get cookies from Chrome or Firefox
+	var url = fmt.Sprintf("https://bandcamp.com/%s/wishlist", username)
 	var cookies = os.Getenv("BANDCAMP_COOKIES")
-	println("Using cookies:", cookies)
 	var headers = map[string]string{
 		"Cookie":     cookies,
 		"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
 	}
 
-	res, getURLError := c.http.Get(wishlistUrl, headers)
+	res, getURLError := c.http.Get(url, headers)
 
 	if getURLError != nil {
 		return getURLError
@@ -56,12 +53,19 @@ func (c *wishlistDownloader) Download(username string) error {
 		return scrapError
 	}
 
-	urlDownloader := NewURLDownloader(c.http, c.file, c.scrapper)
-
 	// just print wishlist and return
+	var album_urls []string
 	for _, item := range wishlistData {
 		fmt.Printf("Wishlist Item: %s", item.Title)
-		urlDownloader.Download(item.AlbumURL)
+		if item.AlbumURL != "" {
+			album_urls = append(album_urls, item.AlbumURL)
+		}
+	}
+
+	urlDownloader := NewURLDownloader(c.http, c.file, c.scrapper)
+	err := urlDownloader.DownloadAll(album_urls)
+	if err != nil {
+		log.Fatalf("Error occurred: %v", err)
 	}
 
 	close(errorChan)
