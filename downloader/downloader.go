@@ -12,4 +12,9 @@ type BandDownloader interface {
 
 type URLDownloader interface {
 	Download(url string) error
+	DownloadAll(urls []string) error
+}
+
+type WishlistDownloader interface {
+	Download(username string, cookies string) error
 }

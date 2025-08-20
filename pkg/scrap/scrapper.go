@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 
 	"github.com/AssassinRobot/Bandcamper/entities"
 	"github.com/PuerkitoBio/goquery"
@@ -12,6 +13,7 @@ import (
 
 type Scrapper interface {
 	ListInfos(reader io.Reader) (*entities.TrackData, error)
+	ListWishlist(reader io.Reader) ([]*entities.Album, error)
 }
 
 func NewScrapper() Scrapper {
@@ -52,9 +54,47 @@ func (s *dataScrapper) ListInfos(reader io.Reader) (*entities.TrackData, error) 
 	case "album":
 		artwork = fmt.Sprintf("https://f4.bcbits.com/img/a%d_16.jpg", trackData.Current.ArtID)
 	default:
-		return nil,fmt.Errorf("error get image:%d", trackData.Current.ID)
+		return nil, fmt.Errorf("error get image:%d", trackData.Current.ID)
 	}
 	trackData.ArtworkURL = artwork
 
 	return trackData, nil
+}
+
+func (s *dataScrapper) ListWishlist(reader io.Reader) ([]*entities.Album, error) {
+	doc, newDocError := goquery.NewDocumentFromReader(reader)
+	if newDocError != nil {
+		return nil, newDocError
+	}
+
+	var albums []*entities.Album
+
+	// When user sets the wishlist to private, bandcamp does a rewrite of the page
+	// to the user collection, which cannot be made private.
+	// So we will try to find the wishlist items in the collection items container.
+
+	var wishlistItems = doc.Find("#wishlist-items-container .collection-items")
+
+	if wishlistItems.Length() == 0 {
+		hasCookies := os.Getenv("BANDCAMP_COOKIES") != ""
+		var message string
+
+		if hasCookies {
+			message = "Could not find wishlist using the provided cookies. Please verify that your username and BANDCAMP_COOKIES value are correct and not expired."
+		} else {
+			message = "Could not find a public wishlist. If your wishlist is private, set the BANDCAMP_COOKIES environment variable with your cookies."
+		}
+
+		return nil, fmt.Errorf("error getting wishlist: %s", message)
+	}
+
+	wishlistItems.Each(func(i int, s *goquery.Selection) {
+		var album = &entities.Album{}
+		album.Title = s.Find(".collection-item-title").Text()
+		album.AlbumURL = s.Find(".item-link").AttrOr("href", "")
+		album.ImageURL = s.Find(".collection-item-art").AttrOr("src", "")
+		albums = append(albums, album)
+	})
+
+	return albums, nil
 }

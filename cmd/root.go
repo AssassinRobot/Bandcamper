@@ -15,9 +15,10 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-func init(){
+func init() {
 	rootCmd.AddCommand(bandCmd)
 	rootCmd.AddCommand(urlCmd)
+	rootCmd.AddCommand(wishlistCmd)
 }
 
 func Execute() {
@@ -25,4 +26,3 @@ func Execute() {
 		log.Fatalln(err)
 	}
 }
-

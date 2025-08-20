@@ -20,7 +20,7 @@ type bandDownloader struct {
 func (c *bandDownloader) GetBand(name string) (*entities.Band, error) {
 	url := fmt.Sprintf("https://%s.bandcamp.com/music", helpers.GetValidName(name))
 
-	res, getURLError := c.http.Get(url)
+	res, getURLError := c.http.Get(url, nil)
 	if getURLError != nil {
 		return nil, getURLError
 	}
@@ -41,7 +41,7 @@ func (c *bandDownloader) GetBand(name string) (*entities.Band, error) {
 }
 
 func (c *bandDownloader) GetAlbum(albumURL string) (*entities.TrackData, error) {
-	res, getURLError := c.http.Get(albumURL)
+	res, getURLError := c.http.Get(albumURL, nil)
 	if getURLError != nil {
 		return nil, getURLError
 	}
@@ -62,7 +62,7 @@ func (c *bandDownloader) GetAlbum(albumURL string) (*entities.TrackData, error) 
 	return data, nil
 }
 func (c *bandDownloader) GetTrack(trackURL string) (*entities.TrackData, error) {
-	res, getURLError := c.http.Get(trackURL)
+	res, getURLError := c.http.Get(trackURL, nil)
 	if getURLError != nil {
 		return nil, getURLError
 	}
@@ -79,14 +79,14 @@ func (c *bandDownloader) GetTrack(trackURL string) (*entities.TrackData, error) 
 		return nil, scrapError
 	}
 	data.BasePath = helpers.GetBasePath(trackURL)
-	log.Println(data.BasePath )
+	log.Println(data.BasePath)
 
 	return data, nil
 }
 
 func (c *bandDownloader) DownloadAlbum(albumURL string) error {
 	err := c.URLDownloader.Download(albumURL)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	return nil
@@ -94,17 +94,17 @@ func (c *bandDownloader) DownloadAlbum(albumURL string) error {
 
 func (c *bandDownloader) DownloadTrack(trackURL string) error {
 	err := c.URLDownloader.Download(trackURL)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func NewBandDownloader(http *utils.HttpMngmnt, file *utils.FileMngmnt, bandScrapper scrap.BandScrapper,downloader URLDownloader) BandDownloader {
+func NewBandDownloader(http *utils.HttpMngmnt, file *utils.FileMngmnt, bandScrapper scrap.BandScrapper, downloader URLDownloader) BandDownloader {
 	return &bandDownloader{
-		http:         http,
-		file:         file,
-		bandScrapper: bandScrapper,
+		http:          http,
+		file:          file,
+		bandScrapper:  bandScrapper,
 		URLDownloader: downloader,
 	}
 }

@@ -17,12 +17,16 @@ func NewHttpMngmnt() *HttpMngmnt {
 	}
 }
 
-func (h *HttpMngmnt) Get(url string) (*http.Response, error) {
+func (h *HttpMngmnt) Get(url string, headers map[string]string) (*http.Response, error) {
 	log.Println("Getting... ", url)
 
 	req, httpRequestError := http.NewRequestWithContext(context.TODO(), "GET", url, nil)
 	if httpRequestError != nil {
 		return nil, httpRequestError
+	}
+
+	for key, value := range headers {
+		req.Header.Add(key, value)
 	}
 
 	res, httpGetError := h.client.Do(req)
