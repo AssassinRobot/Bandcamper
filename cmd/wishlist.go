@@ -25,17 +25,24 @@ func init() {
 }
 
 var wishlistCmd = &cobra.Command{
-	Use:   "wishlist",
+	Use:   "wishlist [username]",
 	Short: "Download wishlist albums",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		username := args[0]
-
 		var cookies string
 		if cookieEnv := os.Getenv("BANDCAMP_COOKIES"); cookieEnv != "" {
 			cookies = cookieEnv
+			log.Printf("using BANDCAMP_COOKIES env var")
 		} else {
 			cookies = ""
+		}
+
+		var username string
+		if usernameEnv := os.Getenv("BANDCAMP_USERNAME"); usernameEnv != "" {
+			username = usernameEnv
+			log.Printf("using BANDCAMP_USERNAME env var")
+		} else {
+			username = args[0]
 		}
 
 		err := wishlistDownloader.Download(username, cookies)
