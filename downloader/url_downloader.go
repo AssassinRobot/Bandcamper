@@ -136,7 +136,7 @@ func (c *urlDownloader) Download(url string, force bool) error {
 	return <-errorChan
 }
 
-func (c *urlDownloader) DownloadAll(urls []string) error {
+func (c *urlDownloader) DownloadAll(urls []string, force bool) error {
 	var wg = &sync.WaitGroup{}
 	var errorChan = make(chan error, len(urls))
 
@@ -149,7 +149,7 @@ func (c *urlDownloader) DownloadAll(urls []string) error {
 			defer wg.Done()
 
 			// Call the Download function for each URL
-			err := c.Download(url)
+			err := c.Download(url, force)
 			if err != nil {
 				errorChan <- err
 			}

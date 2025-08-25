@@ -57,7 +57,7 @@ var bandCmd = &cobra.Command{
 							helpers.PrintErrorAndExit("Invalid number")
 						}
 
-						err := bandDownloader.DownloadAlbum(album.AlbumURL)
+						err := bandDownloader.DownloadAlbum(album.AlbumURL, force)
 
 						if err != nil {
 							helpers.PrintErrorAndExit("Error download album:", err)
@@ -100,7 +100,7 @@ var bandCmd = &cobra.Command{
 
 						switch helpers.GetScan("\n\nDo you want download specific track or album? (t/a/q): ") {
 						case "a":
-							err := bandDownloader.DownloadAlbum(album.AlbumURL)
+							err := bandDownloader.DownloadAlbum(album.AlbumURL, force)
 
 							if err != nil {
 								helpers.PrintErrorAndExit("Error download album:", err)

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -28,7 +27,7 @@ var wishlistCmd = &cobra.Command{
 	Use:   "wishlist [username]",
 	Short: "Download wishlist albums",
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		var cookies string
 		if cookieEnv := os.Getenv("BANDCAMP_COOKIES"); cookieEnv != "" {
 			cookies = cookieEnv
@@ -45,11 +44,17 @@ var wishlistCmd = &cobra.Command{
 			username = args[0]
 		}
 
-		err := wishlistDownloader.Download(username, cookies)
+		force, err := cmd.Flags().GetBool("force")
 		if err != nil {
-			fmt.Println(err)
+			return err
+		}
+
+		err = wishlistDownloader.Download(username, cookies, force)
+		if err != nil {
+			return err
 		}
 
 		log.Println("Done")
+		return nil
 	},
 }
