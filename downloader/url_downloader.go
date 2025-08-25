@@ -19,8 +19,9 @@ type urlDownloader struct {
 	scrapper  scrap.Scrapper
 }
 
-func (c *urlDownloader) Download(url string) error {
-	var wg = &sync.WaitGroup{}
+var wg = &sync.WaitGroup{}
+
+func (c *urlDownloader) Download(url string, force bool) error {
 	var errorChan = make(chan error, 500)
 
 	res, getURLError := c.http.Get(url, nil)
@@ -81,6 +82,18 @@ func (c *urlDownloader) Download(url string) error {
 			"-" + helpers.RemoveAlphaNum(currentTrackData.Artist) +
 			"-" + helpers.RemoveAlphaNum(currentTrackData.CurrentTrackTitle) +
 			".mp3"
+
+		if !force {
+			exists, statError := c.file.Exists(currentTrackData.CurrentTrackFilepath)
+			if statError != nil {
+				return statError
+			}
+			if exists {
+				println("Skipping " + currentTrackData.CurrentTrackFilepath + " (file exists)")
+				wg.Done()
+				continue
+			}
+		}
 
 		go func(mp3 entities.TrackData) {
 			defer wg.Done()

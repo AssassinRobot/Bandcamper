@@ -7,14 +7,9 @@ type BandDownloader interface {
 	GetAlbum(albumURL string) (*entities.TrackData, error)
 	GetTrack(trackURL string) (*entities.TrackData, error)
 	DownloadAlbum(albumURL string) error
-	DownloadTrack(trackURL string) error
+	DownloadTrack(trackURL string, force bool) error
 }
 
 type URLDownloader interface {
-	Download(url string) error
-	DownloadAll(urls []string) error
-}
-
-type WishlistDownloader interface {
-	Download(username string, cookies string) error
+	Download(url string, force bool) error
 }

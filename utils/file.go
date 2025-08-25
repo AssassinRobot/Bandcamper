@@ -98,3 +98,14 @@ func (f *FileMngmnt) close() {
 
 	log.Fatalln("missing file")
 }
+
+func (f *FileMngmnt) Exists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, err
+}

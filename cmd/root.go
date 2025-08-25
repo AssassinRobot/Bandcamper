@@ -19,6 +19,7 @@ func init() {
 	rootCmd.AddCommand(bandCmd)
 	rootCmd.AddCommand(urlCmd)
 	rootCmd.AddCommand(wishlistCmd)
+	rootCmd.PersistentFlags().BoolP("force", "f", false, "Force re-download of files")
 }
 
 func Execute() {

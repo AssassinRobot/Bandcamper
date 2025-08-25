@@ -85,15 +85,15 @@ func (c *bandDownloader) GetTrack(trackURL string) (*entities.TrackData, error) 
 }
 
 func (c *bandDownloader) DownloadAlbum(albumURL string) error {
-	err := c.URLDownloader.Download(albumURL)
+	err := c.URLDownloader.Download(albumURL, false)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *bandDownloader) DownloadTrack(trackURL string) error {
-	err := c.URLDownloader.Download(trackURL)
+func (c *bandDownloader) DownloadTrack(trackURL string, force bool) error {
+	err := c.URLDownloader.Download(trackURL, force)
 	if err != nil {
 		return err
 	}
