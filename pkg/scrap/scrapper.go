@@ -14,6 +14,7 @@ import (
 type Scrapper interface {
 	ListInfos(reader io.Reader) (*entities.TrackData, error)
 	ListWishlist(reader io.Reader) ([]*entities.Album, error)
+	ListCollection(reader io.Reader) ([]*entities.CollectionItem, error)
 }
 
 func NewScrapper() Scrapper {
@@ -97,4 +98,25 @@ func (s *dataScrapper) ListWishlist(reader io.Reader) ([]*entities.Album, error)
 	})
 
 	return albums, nil
+}
+
+func (s *dataScrapper) ListCollection(reader io.Reader) ([]*entities.CollectionItem, error) {
+	doc, newDocError := goquery.NewDocumentFromReader(reader)
+	if newDocError != nil {
+		return nil, newDocError
+	}
+
+	var collectionItems []*entities.CollectionItem
+
+	var items = doc.Find("#collection-items .collection-item-container")
+
+	items.Each(func(i int, s *goquery.Selection) {
+		var item = &entities.CollectionItem{}
+		item.Title = s.Find(".collection-item-title").Text()
+		item.ImageURL = s.Find(".collection-item-art").AttrOr("src", "")
+		item.DownloadURL = s.Find(".redownload-item").AttrOr("href", "")
+		collectionItems = append(collectionItems, item)
+	})
+
+	return collectionItems, nil
 }

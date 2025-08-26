@@ -4,8 +4,8 @@ type EmailMngmnt struct {
 	address string
 }
 
-func NewEmailMngmnt(address string) *EmailMngmnt {
-	return &EmailMngmnt{address: address}
+func NewEmailMngmnt() *EmailMngmnt {
+	return &EmailMngmnt{address: ""}
 }
 
 func (e *EmailMngmnt) ReadInbox() ([]string, error) {

@@ -18,3 +18,8 @@ type URLDownloader interface {
 type WishlistDownloader interface {
 	Download(username string, cookies string) error
 }
+
+type CollectionDownloader interface {
+	Download(username string, cookies string) error
+	DownloadAll(urls []string) error
+}

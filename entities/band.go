@@ -2,21 +2,27 @@ package entities
 
 type (
 	Band struct {
-		ImageURL  string
+		ImageURL string
 		Title    string
 		Location string
 		Bio      string
-		Albums    []Album
-		Singles []Single
+		Albums   []Album
+		Singles  []Single
 	}
 	Album struct {
-		Title     string
+		Title    string
 		AlbumURL string
-		ImageURL   string
+		ImageURL string
 	}
 	Single struct {
-		Title     string
-		SingleURL string
-		ImageURL   string
+		Title       string
+		SingleURL   string
+		ImageURL    string
+		DownloadURL string
+	}
+	CollectionItem struct {
+		Title       string
+		ImageURL    string
+		DownloadURL string
 	}
 )
