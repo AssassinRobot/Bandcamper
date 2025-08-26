@@ -28,12 +28,17 @@ var bandCmd = &cobra.Command{
 	Use:   "band [band name]",
 	Short: "Get Band Information",
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		bandName := args[0]
+
+		force, err := cmd.Flags().GetBool("force")
+		if err != nil {
+			return err
+		}
 
 		band, err := bandDownloader.GetBand(bandName)
 		if err != nil {
-			helpers.PrintErrorAndExit("Error get band:", err)
+			return err
 		} else {
 			helpers.GetBandInfo(band)
 
@@ -52,7 +57,7 @@ var bandCmd = &cobra.Command{
 							helpers.PrintErrorAndExit("Invalid number")
 						}
 
-						err := bandDownloader.DownloadAlbum(album.AlbumURL)
+						err := bandDownloader.DownloadAlbum(album.AlbumURL, force)
 
 						if err != nil {
 							helpers.PrintErrorAndExit("Error download album:", err)
@@ -65,7 +70,7 @@ var bandCmd = &cobra.Command{
 							helpers.PrintErrorAndExit("Invalid number")
 						}
 
-						err := bandDownloader.DownloadTrack(single.SingleURL)
+						err := bandDownloader.DownloadTrack(single.SingleURL, force)
 
 						if err != nil {
 							helpers.PrintErrorAndExit("Error download single track:", err)
@@ -95,7 +100,7 @@ var bandCmd = &cobra.Command{
 
 						switch helpers.GetScan("\n\nDo you want download specific track or album? (t/a/q): ") {
 						case "a":
-							err := bandDownloader.DownloadAlbum(album.AlbumURL)
+							err := bandDownloader.DownloadAlbum(album.AlbumURL, force)
 
 							if err != nil {
 								helpers.PrintErrorAndExit("Error download album:", err)
@@ -108,7 +113,7 @@ var bandCmd = &cobra.Command{
 								helpers.PrintErrorAndExit("Invalid number")
 							}
 
-							err := bandDownloader.DownloadTrack(helpers.GetSpecificTrackURL(albumData.BasePath, track.TitleLink))
+							err := bandDownloader.DownloadTrack(helpers.GetSpecificTrackURL(albumData.BasePath, track.TitleLink), force)
 							if err != nil {
 								helpers.PrintErrorAndExit("Error download track:", err)
 							}
@@ -134,7 +139,7 @@ var bandCmd = &cobra.Command{
 
 						switch helpers.GetScan("\nDo you want download it? (y/n/q): ") {
 						case "y":
-							err := bandDownloader.DownloadTrack(single.SingleURL)
+							err := bandDownloader.DownloadTrack(single.SingleURL, force)
 							if err != nil {
 								helpers.PrintErrorAndExit("Error get single track info:", err)
 							}
@@ -160,7 +165,7 @@ var bandCmd = &cobra.Command{
 			default:
 				helpers.InvalidOption()
 			}
-
 		}
+		return nil
 	},
 }

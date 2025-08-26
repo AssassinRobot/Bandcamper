@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/AssassinRobot/Bandcamper/downloader"
@@ -27,14 +26,20 @@ var urlCmd = &cobra.Command{
 	Use:   "url [url]",
 	Short: "Download album/track by url",
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		url := args[0]
 
-		err := urlDownloader.Download(url)
-		if err != nil{
-			fmt.Println(err)
+		force, err := cmd.Flags().GetBool("force")
+		if err != nil {
+			return err
+		}
+
+		err = urlDownloader.Download(url, force)
+		if err != nil {
+			return err
 		}
 
 		log.Println("Done")
+		return nil
 	},
 }

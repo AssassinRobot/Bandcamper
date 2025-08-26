@@ -14,7 +14,7 @@ type wishlistDownloader struct {
 	scrapper scrap.Scrapper
 }
 
-func (c *wishlistDownloader) Download(username string, cookies string) error {
+func (c *wishlistDownloader) Download(username string, cookies string, force bool) error {
 	var errorChan = make(chan error, 500)
 
 	var url = fmt.Sprintf("https://bandcamp.com/%s/wishlist", username)
@@ -52,7 +52,7 @@ func (c *wishlistDownloader) Download(username string, cookies string) error {
 	}
 
 	urlDownloader := NewURLDownloader(c.http, c.file, c.scrapper)
-	err := urlDownloader.DownloadAll(albumUrls)
+	err := urlDownloader.DownloadAll(albumUrls, force)
 	if err != nil {
 		log.Fatalf("Error occurred: %v", err)
 	}
