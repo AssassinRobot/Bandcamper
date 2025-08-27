@@ -19,6 +19,7 @@ func init() {
 	rootCmd.AddCommand(bandCmd)
 	rootCmd.AddCommand(urlCmd)
 	rootCmd.AddCommand(wishlistCmd)
+	rootCmd.AddCommand(collectionCmd)
 }
 
 func Execute() {

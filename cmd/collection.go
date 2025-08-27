@@ -18,9 +18,29 @@ var (
 func init() {
 	urlFile := utils.NewFileMngmnt()
 	urlHttp := utils.NewHttpMngmnt()
-	urlEmail := utils.NewEmailMngmnt()
-
 	scrapper := scrap.NewScrapper()
+
+	var emailAddress, emailPassword, emailServer string
+	if emailAddressEnv := os.Getenv("EMAIL_ADDRESS"); emailAddressEnv != "" {
+		emailAddress = emailAddressEnv
+		log.Printf("using EMAIL_ADDRESS env var")
+	} else {
+		panic("EMAIL_ADDRESS env var is required for collection command")
+	}
+	if emailPasswordEnv := os.Getenv("EMAIL_PASSWORD"); emailPasswordEnv != "" {
+		emailPassword = emailPasswordEnv
+		log.Printf("using EMAIL_PASSWORD env var")
+	} else {
+		panic("EMAIL_PASSWORD env var is required for collection command")
+	}
+	if emailServerEnv := os.Getenv("EMAIL_SERVER"); emailServerEnv != "" {
+		emailServer = emailServerEnv
+		log.Printf("using EMAIL_SERVER env var")
+	} else {
+		panic("EMAIL_SERVER env var is required for collection command")
+	}
+
+	urlEmail := utils.NewEmailMngmnt(emailAddress, emailPassword, emailServer)
 
 	collectionDownloader = downloader.NewCollectionDownloader(urlHttp, urlFile, urlEmail, scrapper)
 }
