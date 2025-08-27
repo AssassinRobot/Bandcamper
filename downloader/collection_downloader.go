@@ -108,7 +108,7 @@ func (c *collectionDownloader) downloadItem(downloadURL string, cookies string) 
 	}()
 
 	// Just print the response body for debugging
-	println("Response Status 2:", res.Status)
+	println("Response Status:", res.Status)
 
 	inbox, err := c.email.ReadInbox()
 	if err != nil {

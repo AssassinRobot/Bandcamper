@@ -107,6 +107,10 @@ func (s *dataScrapper) ListCollection(reader io.Reader) ([]*entities.CollectionI
 		return nil, newDocError
 	}
 
+	// Create debug file
+	// html, _ := doc.Html()
+	// os.WriteFile("collection.html", []byte(html), 0644)
+
 	var collectionItems []*entities.CollectionItem
 
 	var items = doc.Find("#collection-items .collection-item-container")
@@ -120,7 +124,7 @@ func (s *dataScrapper) ListCollection(reader io.Reader) ([]*entities.CollectionI
 
 		item.Title = title
 		item.ImageURL = s.Find(".collection-item-art").AttrOr("src", "")
-		item.DownloadURL = s.Find(".redownload-item").AttrOr("href", "")
+		item.DownloadURL = s.Find(".redownload-item a").AttrOr("href", "")
 		collectionItems = append(collectionItems, item)
 	})
 
