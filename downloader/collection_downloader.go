@@ -63,6 +63,7 @@ func (c *collectionDownloader) Download(username string, cookies string) error {
 }
 
 func (c *collectionDownloader) DownloadAll(urls []string) error {
+	println("Starting download of all collection items...")
 	return nil
 }
 

@@ -46,7 +46,7 @@ func init() {
 }
 
 var collectionCmd = &cobra.Command{
-	Use:   "collection [username]",
+	Use:   "collection",
 	Short: "Download collection albums",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
