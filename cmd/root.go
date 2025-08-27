@@ -1,5 +1,6 @@
 package cmd
 
+import _ "github.com/joho/godotenv/autoload"
 import (
 	"fmt"
 	"log"
