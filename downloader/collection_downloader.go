@@ -18,7 +18,7 @@ type collectionDownloader struct {
 func (c *collectionDownloader) Download(username string, cookies string) error {
 	var errorChan = make(chan error, 500)
 
-	var url = fmt.Sprintf("https://bandcamp.com/%s/collection", username)
+	var url = fmt.Sprintf("https://bandcamp.com/%s", username)
 	var headers = map[string]string{
 		"Cookie": cookies,
 	}
