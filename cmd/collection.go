@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -54,7 +55,7 @@ var collectionCmd = &cobra.Command{
 			cookies = cookieEnv
 			log.Printf("using BANDCAMP_COOKIES env var")
 		} else {
-			cookies = ""
+			return fmt.Errorf("BANDCAMP_COOKIES env var is required for collection command")
 		}
 
 		var username string
