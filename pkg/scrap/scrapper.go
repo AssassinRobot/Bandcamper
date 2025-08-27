@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/AssassinRobot/Bandcamper/entities"
 	"github.com/PuerkitoBio/goquery"
@@ -112,7 +113,12 @@ func (s *dataScrapper) ListCollection(reader io.Reader) ([]*entities.CollectionI
 
 	items.Each(func(i int, s *goquery.Selection) {
 		var item = &entities.CollectionItem{}
-		item.Title = s.Find(".collection-item-title").Text()
+
+		title := s.Find(".collection-item-title").Text()
+		title = strings.Join(strings.Fields(title), " ")
+		title = strings.ReplaceAll(title, "(gift given)", "")
+
+		item.Title = title
 		item.ImageURL = s.Find(".collection-item-art").AttrOr("src", "")
 		item.DownloadURL = s.Find(".redownload-item").AttrOr("href", "")
 		collectionItems = append(collectionItems, item)
