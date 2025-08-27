@@ -3,6 +3,8 @@ package downloader
 import (
 	"fmt"
 	"log"
+	"net/url"
+	"strings"
 
 	"github.com/AssassinRobot/Bandcamper/pkg/scrap"
 	"github.com/AssassinRobot/Bandcamper/utils"
@@ -53,7 +55,7 @@ func (c *collectionDownloader) Download(username string, cookies string) error {
 	}
 
 	collectionDownloader := NewCollectionDownloader(c.http, c.file, c.email, c.scrapper)
-	err := collectionDownloader.DownloadAll(collectionUrls)
+	err := collectionDownloader.DownloadAll(collectionUrls, cookies)
 	if err != nil {
 		log.Fatalf("Error occurred: %v", err)
 	}
@@ -62,8 +64,67 @@ func (c *collectionDownloader) Download(username string, cookies string) error {
 	return nil
 }
 
-func (c *collectionDownloader) DownloadAll(urls []string) error {
+func (c *collectionDownloader) downloadItem(downloadURL string, cookies string) error {
+	var errorChan = make(chan error, 500)
+
+	var reauthURL = "https://bandcamp.com/api/downloadsreauth/1/reauth"
+	var headers = map[string]string{
+		"Cookie": cookies,
+	}
+
+	// get ?payment_id=xxxx from url
+	parsedURL, err := url.Parse(downloadURL)
+	if err != nil {
+		return err
+	}
+	queryParams := parsedURL.Query()
+	paymentID := queryParams.Get("payment_id")
+	if strings.TrimSpace(paymentID) == "" {
+		return fmt.Errorf("payment_id not found in download URL")
+	}
+
+	var body = map[string]any{
+		"payment_id":   paymentID,
+		"reauth_email": c.email.Address,
+	}
+	res, getURLError := c.http.Post(reauthURL, headers, body)
+
+	if getURLError != nil {
+		return getURLError
+	}
+
+	defer func() {
+		err := res.Body.Close()
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}()
+
+	// Just print the response body for debugging
+	println("Response Status:", res.Status)
+
+	// collectionData, scrapError := c.scrapper.ListCollection(res.Body)
+	// if scrapError != nil {
+	// 	return scrapError
+	// }
+
+	close(errorChan)
+	return nil
+}
+
+func (c *collectionDownloader) DownloadAll(urls []string, cookies string) error {
 	println("Starting download of all collection items...")
+	for _, url := range urls {
+		println("Downloading from URL:", url)
+		// Here you would implement the actual download logic
+		// For demonstration, we'll just simulate a download with a print statement
+		err := c.downloadItem(url, cookies)
+		if err != nil {
+			log.Printf("Error downloading %s: %v", url, err)
+			continue
+		}
+		println("Successfully downloaded from URL:", url)
+	}
 	return nil
 }
 

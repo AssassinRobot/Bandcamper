@@ -21,5 +21,5 @@ type WishlistDownloader interface {
 
 type CollectionDownloader interface {
 	Download(username string, cookies string) error
-	DownloadAll(urls []string) error
+	DownloadAll(urls []string, cookies string) error
 }
