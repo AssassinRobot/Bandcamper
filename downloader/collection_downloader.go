@@ -53,6 +53,13 @@ func (c *collectionDownloader) Download(username string, cookies string) error {
 			collectionUrls = append(collectionUrls, item.DownloadURL)
 		}
 	}
+	fmt.Printf("Total collection items with download URLs: %d\n", len(collectionUrls))
+
+	if len(collectionUrls) == 0 {
+		fmt.Println("No downloadable items found in the collection.")
+		close(errorChan)
+		return nil
+	}
 
 	collectionDownloader := NewCollectionDownloader(c.http, c.file, c.email, c.scrapper)
 	err := collectionDownloader.DownloadAll(collectionUrls, cookies)
@@ -101,7 +108,20 @@ func (c *collectionDownloader) downloadItem(downloadURL string, cookies string) 
 	}()
 
 	// Just print the response body for debugging
-	println("Response Status:", res.Status)
+	println("Response Status 2:", res.Status)
+
+	inbox, err := c.email.ReadInbox()
+	if err != nil {
+		return err
+	}
+	if len(inbox) == 0 {
+		return fmt.Errorf("no email received for reauth")
+	}
+	// just print email subjects
+	for _, email := range inbox {
+		fmt.Printf("Email Subject: %s\n", email)
+	}
+	panic("not implemented")
 
 	// collectionData, scrapError := c.scrapper.ListCollection(res.Body)
 	// if scrapError != nil {
