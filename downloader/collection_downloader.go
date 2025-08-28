@@ -126,7 +126,7 @@ func (c *collectionDownloader) getCollectionItems(username string, cookies strin
 	return items, nil
 }
 
-func (c *collectionDownloader) Download(username string, cookies string) error {
+func (c *collectionDownloader) DownloadAll(username string, cookies string) error {
 	var errorChan = make(chan error, 500)
 
 	collectionData, err := c.getCollectionItems(username, cookies)
@@ -151,11 +151,26 @@ func (c *collectionDownloader) Download(username string, cookies string) error {
 		return nil
 	}
 
+	err = c.downloadAll(collectionUrls, cookies)
+	if err != nil {
+		return err
+	}
+
+	close(errorChan)
 	return nil
 }
 
-func (c *collectionDownloader) downloadItem(downloadURL string, cookies string) error {
+func (c *collectionDownloader) Download(downloadURL string, cookies string) error {
 	var errorChan = make(chan error, 500)
+
+	// downloadURL example: https://bandcamp.com/download?payment_id=xxxx&sitem_id=yyyyy
+	// check that it looks like that with a regex
+	if !strings.Contains(downloadURL, "payment_id=") {
+		return fmt.Errorf("invalid download URL: %s", downloadURL)
+	}
+	if !strings.Contains(downloadURL, "sitem_id=") {
+		return fmt.Errorf("invalid download URL: %s", downloadURL)
+	}
 
 	var reauthURL = "https://bandcamp.com/api/downloadsreauth/1/reauth"
 	var headers = map[string]string{
@@ -204,24 +219,18 @@ func (c *collectionDownloader) downloadItem(downloadURL string, cookies string) 
 	for _, email := range inbox {
 		fmt.Printf("Email Subject: %s\n", email)
 	}
-	// panic("not implemented")
-
-	// collectionData, scrapError := c.scrapper.ListCollection(res.Body)
-	// if scrapError != nil {
-	// 	return scrapError
-	// }
 
 	close(errorChan)
-	return nil
+	panic("not implemented")
 }
 
-func (c *collectionDownloader) DownloadAll(urls []string, cookies string) error {
+func (c *collectionDownloader) downloadAll(urls []string, cookies string) error {
 	println("Starting download of all collection items...")
 	for _, url := range urls {
 		println("Downloading from URL:", url)
 		// Here you would implement the actual download logic
 		// For demonstration, we'll just simulate a download with a print statement
-		err := c.downloadItem(url, cookies)
+		err := c.Download(url, cookies)
 		if err != nil {
 			log.Printf("Error downloading %s: %v", url, err)
 			continue

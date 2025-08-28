@@ -66,7 +66,7 @@ var collectionCmd = &cobra.Command{
 			username = args[0]
 		}
 
-		err := collectionDownloader.Download(username, cookies)
+		err := collectionDownloader.DownloadAll(username, cookies)
 		if err != nil {
 			return err
 		}
