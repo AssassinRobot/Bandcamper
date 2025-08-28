@@ -1,11 +1,13 @@
 package downloader
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/url"
 	"strings"
 
+	"github.com/AssassinRobot/Bandcamper/entities"
 	"github.com/AssassinRobot/Bandcamper/pkg/scrap"
 	"github.com/AssassinRobot/Bandcamper/utils"
 )
@@ -17,17 +19,14 @@ type collectionDownloader struct {
 	scrapper scrap.Scrapper
 }
 
-func (c *collectionDownloader) Download(username string, cookies string) error {
-	var errorChan = make(chan error, 500)
-
+func (c *collectionDownloader) getCollectionData(username string, cookies string) (*entities.CollectionData, error) {
 	var url = fmt.Sprintf("https://bandcamp.com/%s", username)
 	var headers = map[string]string{
 		"Cookie": cookies,
 	}
 	res, getURLError := c.http.Get(url, headers)
-
 	if getURLError != nil {
-		return getURLError
+		return nil, getURLError
 	}
 
 	defer func() {
@@ -37,12 +36,74 @@ func (c *collectionDownloader) Download(username string, cookies string) error {
 		}
 	}()
 
-	// Just print the response body for debugging
-	println("Response Status:", res.Status)
-
-	collectionData, scrapError := c.scrapper.ListCollection(res.Body)
+	collectionData, scrapError := c.scrapper.CollectionData(res.Body)
 	if scrapError != nil {
-		return scrapError
+		return nil, scrapError
+	}
+	return collectionData, nil
+}
+
+func (c *collectionDownloader) getCollectionItems(username string, cookies string) ([]*entities.CollectionItem, error) {
+	collectionData, err := c.getCollectionData(username, cookies)
+	if err != nil {
+		return nil, err
+	}
+
+	url := "https://bandcamp.com/api/fancollection/1/collection_items"
+	headers := map[string]string{
+		"Cookie":       cookies,
+		"Content-Type": "application/json",
+		"Referer":      fmt.Sprintf("https://bandcamp.com/%s", username),
+	}
+
+	var body = map[string]any{
+		"fan_id":           collectionData.FanData.FanId,
+		"older_than_token": collectionData.LastToken,
+		"count":            100,
+	}
+
+	res, err := c.http.Post(url, headers, body)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err := res.Body.Close()
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}()
+
+	// parse json response
+	var data *entities.CollectionItemsData
+	err = json.NewDecoder(res.Body).Decode(&data)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var items []*entities.CollectionItem
+	for _, item := range data.Items {
+		redownloadURL := data.RedownloadURLs[item.ID]
+		if redownloadURL == "" {
+			continue
+		}
+		collectionItem := &entities.CollectionItem{
+			Title:       item.Title,
+			ArtURL:      item.ArtURL,
+			DownloadURL: redownloadURL,
+		}
+		items = append(items, collectionItem)
+	}
+	return items, nil
+}
+
+func (c *collectionDownloader) Download(username string, cookies string) error {
+	var errorChan = make(chan error, 500)
+
+	collectionData, err := c.getCollectionItems(username, cookies)
+	if err != nil {
+		return err
 	}
 
 	// just print collection and return
@@ -61,13 +122,6 @@ func (c *collectionDownloader) Download(username string, cookies string) error {
 		return nil
 	}
 
-	collectionDownloader := NewCollectionDownloader(c.http, c.file, c.email, c.scrapper)
-	err := collectionDownloader.DownloadAll(collectionUrls, cookies)
-	if err != nil {
-		log.Fatalf("Error occurred: %v", err)
-	}
-
-	close(errorChan)
 	return nil
 }
 
@@ -121,7 +175,7 @@ func (c *collectionDownloader) downloadItem(downloadURL string, cookies string) 
 	for _, email := range inbox {
 		fmt.Printf("Email Subject: %s\n", email)
 	}
-	panic("not implemented")
+	// panic("not implemented")
 
 	// collectionData, scrapError := c.scrapper.ListCollection(res.Body)
 	// if scrapError != nil {

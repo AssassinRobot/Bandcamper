@@ -22,7 +22,7 @@ type (
 	}
 	CollectionItem struct {
 		Title       string
-		ImageURL    string
+		ArtURL      string
 		DownloadURL string
 	}
 )

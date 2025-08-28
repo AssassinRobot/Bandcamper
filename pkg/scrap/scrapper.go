@@ -16,6 +16,7 @@ type Scrapper interface {
 	ListInfos(reader io.Reader) (*entities.TrackData, error)
 	ListWishlist(reader io.Reader) ([]*entities.Album, error)
 	ListCollection(reader io.Reader) ([]*entities.CollectionItem, error)
+	CollectionData(reader io.Reader) (*entities.CollectionData, error)
 }
 
 func NewScrapper() Scrapper {
@@ -123,10 +124,54 @@ func (s *dataScrapper) ListCollection(reader io.Reader) ([]*entities.CollectionI
 		title = strings.ReplaceAll(title, "(gift given)", "")
 
 		item.Title = title
-		item.ImageURL = s.Find(".collection-item-art").AttrOr("src", "")
+		item.ArtURL = s.Find(".collection-item-art").AttrOr("src", "")
 		item.DownloadURL = s.Find(".redownload-item a").AttrOr("href", "")
 		collectionItems = append(collectionItems, item)
 	})
 
 	return collectionItems, nil
+}
+
+func (s *dataScrapper) CollectionData(reader io.Reader) (*entities.CollectionData, error) {
+	doc, newDocError := goquery.NewDocumentFromReader(reader)
+	if newDocError != nil {
+		return nil, newDocError
+	}
+
+	var pageData = &entities.CollectionData{}
+
+	p := doc.Find("#pagedata")
+	blob, exists := p.Attr("data-blob")
+	if !exists {
+		return nil, fmt.Errorf("error getting collection data")
+	}
+
+	jsonUnmarshalError := json.Unmarshal([]byte(blob), pageData)
+	if jsonUnmarshalError != nil {
+		return nil, jsonUnmarshalError
+	}
+
+	return pageData, nil
+}
+
+func (s *dataScrapper) WishlistData(reader io.Reader) (*entities.WishlistData, error) {
+	doc, newDocError := goquery.NewDocumentFromReader(reader)
+	if newDocError != nil {
+		return nil, newDocError
+	}
+
+	var pageData = &entities.WishlistData{}
+
+	p := doc.Find("#pagedata")
+	blob, exists := p.Attr("data-blob")
+	if !exists {
+		return nil, fmt.Errorf("error getting collection data")
+	}
+
+	jsonUnmarshalError := json.Unmarshal([]byte(blob), pageData)
+	if jsonUnmarshalError != nil {
+		return nil, jsonUnmarshalError
+	}
+
+	return pageData, nil
 }
