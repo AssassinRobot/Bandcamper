@@ -21,12 +21,17 @@ func init() {
 	scrapper := scrap.NewScrapper()
 
 	var emailAddress, emailPassword, emailServer string
+
 	if emailAddressEnv := os.Getenv("EMAIL_ADDRESS"); emailAddressEnv != "" {
 		emailAddress = emailAddressEnv
 		log.Printf("using EMAIL_ADDRESS env var")
+	} else if emailAddressEnv := os.Getenv("BANDCAMP_EMAIL"); emailAddressEnv != "" {
+		emailAddress = emailAddressEnv
+		log.Printf("using BANDCAMP_EMAIL env var")
 	} else {
 		panic("EMAIL_ADDRESS env var is required for collection command")
 	}
+
 	if emailPasswordEnv := os.Getenv("EMAIL_PASSWORD"); emailPasswordEnv != "" {
 		emailPassword = emailPasswordEnv
 		log.Printf("using EMAIL_PASSWORD env var")
@@ -66,10 +71,27 @@ var collectionCmd = &cobra.Command{
 			username = args[0]
 		}
 
-		err := collectionDownloader.DownloadAll(username, cookies)
+		var email string
+		if emailEnv := os.Getenv("BANDCAMP_EMAIL"); emailEnv != "" {
+			email = emailEnv
+			log.Printf("using BANDCAMP_EMAIL or EMAIL_ADDRESS env var")
+		} else {
+			return fmt.Errorf("BANDCAMP_EMAIL or EMAIL_ADDRESS env var is required for collection command")
+		}
+
+		log.Printf("Downloading collection for user: %s\n", username)
+		log.Printf("Using cookies: %s\n", cookies)
+		log.Printf("Using email: %s\n", email)
+
+		err := collectionDownloader.DebugEmail()
 		if err != nil {
 			return err
 		}
+
+		// err := collectionDownloader.DownloadAll(username, cookies, email)
+		// if err != nil {
+		// 	return err
+		// }
 
 		log.Println("Done")
 		return nil
