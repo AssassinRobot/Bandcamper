@@ -2,6 +2,8 @@ package utils
 
 import (
 	"fmt"
+	"io"
+
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
 )
@@ -13,6 +15,12 @@ type EmailMngmnt struct {
 	Server   string // e.g. "imap.gmail.com:993"
 }
 
+type Email struct {
+	From    string
+	Subject string
+	Body    string
+}
+
 func NewEmailMngmnt(address, password, server string) *EmailMngmnt {
 	return &EmailMngmnt{
 		Address:  address,
@@ -21,7 +29,7 @@ func NewEmailMngmnt(address, password, server string) *EmailMngmnt {
 	}
 }
 
-func (e *EmailMngmnt) ReadInbox() ([]string, error) {
+func (e *EmailMngmnt) ReadInbox() ([]Email, error) {
 	// Connect to server
 	c, err := client.DialTLS(e.Server, nil)
 	if err != nil {
@@ -41,7 +49,7 @@ func (e *EmailMngmnt) ReadInbox() ([]string, error) {
 	}
 
 	if mbox.Messages == 0 {
-		return []string{}, nil
+		return []Email{}, nil
 	}
 
 	// Fetch the last 5 messages
@@ -55,17 +63,41 @@ func (e *EmailMngmnt) ReadInbox() ([]string, error) {
 	messages := make(chan *imap.Message, 10)
 	done := make(chan error, 1)
 	go func() {
-		done <- c.Fetch(seqset, []imap.FetchItem{imap.FetchEnvelope}, messages)
+		section := &imap.BodySectionName{}
+		items := []imap.FetchItem{imap.FetchEnvelope, section.FetchItem()}
+		done <- c.Fetch(seqset, items, messages)
 	}()
 
-	var subjects []string
+	var emails []Email
 	for msg := range messages {
-		subjects = append(subjects, msg.Envelope.Subject)
+		from := msg.Envelope.From[0].MailboxName
+		from += "@" + msg.Envelope.From[0].HostName
+
+		// Get the body section
+		section := &imap.BodySectionName{}
+		r := msg.GetBody(section)
+		if r == nil {
+			fmt.Println("Server didn't return message body")
+			continue
+		}
+
+		// Read plaintext body
+		b, err := io.ReadAll(r)
+		if err != nil {
+			fmt.Println("Error reading body:", err)
+			continue
+		}
+
+		emails = append(emails, Email{
+			From:    from,
+			Subject: msg.Envelope.Subject,
+			Body:    string(b),
+		})
 	}
 
 	if err := <-done; err != nil {
 		return nil, err
 	}
 
-	return subjects, nil
+	return emails, nil
 }

@@ -20,6 +20,7 @@ type WishlistDownloader interface {
 }
 
 type CollectionDownloader interface {
-	Download(username string, cookies string) error
-	DownloadAll(username string, cookies string) error
+	Download(username string, cookies string, email string) error
+	DownloadAll(username string, cookies string, email string) error
+	DebugEmail() error
 }

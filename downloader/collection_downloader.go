@@ -21,6 +21,23 @@ type collectionDownloader struct {
 	scrapper scrap.Scrapper
 }
 
+func (c *collectionDownloader) DebugEmail() error {
+	inbox, err := c.email.ReadInbox()
+	if err != nil {
+		return err
+	}
+	if len(inbox) == 0 {
+		return fmt.Errorf("no email found")
+	}
+	// just print email subjects
+	fmt.Println()
+	for _, email := range inbox {
+		fmt.Printf("Email From: %s\n", email.From)
+		fmt.Printf("%s\n\n", email.Subject)
+	}
+	return nil
+}
+
 func (c *collectionDownloader) getCollectionData(username string, cookies string) (*entities.CollectionPage, error) {
 	var url = fmt.Sprintf("https://bandcamp.com/%s", username)
 	var headers = map[string]string{
@@ -45,7 +62,7 @@ func (c *collectionDownloader) getCollectionData(username string, cookies string
 	return collectionPageData, nil
 }
 
-func (c *collectionDownloader) getCollectionItems(username string, cookies string) ([]*entities.CollectionItem, error) {
+func (c *collectionDownloader) getCollectionItems(username string, cookies string, email string) ([]*entities.CollectionItem, error) {
 	collectionPageData, err := c.getCollectionData(username, cookies)
 	if err != nil {
 		return nil, err
@@ -84,13 +101,6 @@ func (c *collectionDownloader) getCollectionItems(username string, cookies strin
 		}
 	}()
 
-	// fmt.Println("POST request successful, parsing response...")
-	// fmt.Println("Request URL:", url)
-	// fmt.Println("Request Body:", body)
-	// fmt.Println("Response Status:", res.Status)
-	// fmt.Println("Response Headers:", res.Header)
-	// fmt.Println("Response Body:")
-
 	var bodyBytes []byte
 	bodyBytes, err = io.ReadAll(res.Body)
 	if err != nil {
@@ -126,10 +136,10 @@ func (c *collectionDownloader) getCollectionItems(username string, cookies strin
 	return items, nil
 }
 
-func (c *collectionDownloader) DownloadAll(username string, cookies string) error {
+func (c *collectionDownloader) DownloadAll(username string, cookies string, email string) error {
 	var errorChan = make(chan error, 500)
 
-	collectionData, err := c.getCollectionItems(username, cookies)
+	collectionData, err := c.getCollectionItems(username, cookies, email)
 	if err != nil {
 		return err
 	}
@@ -151,7 +161,7 @@ func (c *collectionDownloader) DownloadAll(username string, cookies string) erro
 		return nil
 	}
 
-	err = c.downloadAll(collectionUrls, cookies)
+	err = c.downloadAll(collectionUrls, cookies, email)
 	if err != nil {
 		return err
 	}
@@ -160,7 +170,7 @@ func (c *collectionDownloader) DownloadAll(username string, cookies string) erro
 	return nil
 }
 
-func (c *collectionDownloader) Download(downloadURL string, cookies string) error {
+func (c *collectionDownloader) Download(downloadURL string, cookies string, email string) error {
 	var errorChan = make(chan error, 500)
 
 	// downloadURL example: https://bandcamp.com/download?payment_id=xxxx&sitem_id=yyyyy
@@ -215,22 +225,49 @@ func (c *collectionDownloader) Download(downloadURL string, cookies string) erro
 	if len(inbox) == 0 {
 		return fmt.Errorf("no email received for reauth")
 	}
-	// just print email subjects
+
+	var downloadLinks []string
 	for _, email := range inbox {
-		fmt.Printf("Email Subject: %s\n", email)
+		subject := strings.TrimSpace(email.Subject)
+		subject = strings.ToLower(subject)
+		subjectCheck := strings.Contains(subject, "download link")
+		subjectCheck = subjectCheck || strings.Contains(subject, "bandcamp")
+
+		if !subjectCheck {
+			continue
+		}
+
+		bodyLines := strings.Split(email.Body, "\n")
+		for _, line := range bodyLines {
+			line = strings.TrimSpace(line)
+			lineCheck := strings.HasPrefix(line, "http://")
+			lineCheck = lineCheck || strings.HasPrefix(line, "https://")
+			lineCheck = lineCheck && strings.Contains(line, "bandcamp.com/download/")
+			lineCheck = lineCheck && strings.Contains(line, "payment_id=")
+			lineCheck = lineCheck && strings.Contains(line, "sitem_id=")
+
+			if lineCheck {
+				downloadLinks = append(downloadLinks, line)
+			}
+		}
 	}
 
+	fmt.Printf("Total download links found in email: %d\n", len(downloadLinks))
+	// for _, link := range downloadLinks {
+	// 	fmt.Printf("Download Link: %s\n", link)
+	// }
+
 	close(errorChan)
-	panic("not implemented")
+	return nil
 }
 
-func (c *collectionDownloader) downloadAll(urls []string, cookies string) error {
+func (c *collectionDownloader) downloadAll(urls []string, cookies string, email string) error {
 	println("Starting download of all collection items...")
 	for _, url := range urls {
 		println("Downloading from URL:", url)
 		// Here you would implement the actual download logic
 		// For demonstration, we'll just simulate a download with a print statement
-		err := c.Download(url, cookies)
+		err := c.Download(url, cookies, email)
 		if err != nil {
 			log.Printf("Error downloading %s: %v", url, err)
 			continue
