@@ -3,8 +3,10 @@ package downloader
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/AssassinRobot/Bandcamper/entities"
@@ -19,7 +21,7 @@ type collectionDownloader struct {
 	scrapper scrap.Scrapper
 }
 
-func (c *collectionDownloader) getCollectionData(username string, cookies string) (*entities.CollectionData, error) {
+func (c *collectionDownloader) getCollectionData(username string, cookies string) (*entities.CollectionPage, error) {
 	var url = fmt.Sprintf("https://bandcamp.com/%s", username)
 	var headers = map[string]string{
 		"Cookie": cookies,
@@ -36,15 +38,15 @@ func (c *collectionDownloader) getCollectionData(username string, cookies string
 		}
 	}()
 
-	collectionData, scrapError := c.scrapper.CollectionData(res.Body)
+	collectionPageData, scrapError := c.scrapper.CollectionPage(res.Body)
 	if scrapError != nil {
 		return nil, scrapError
 	}
-	return collectionData, nil
+	return collectionPageData, nil
 }
 
 func (c *collectionDownloader) getCollectionItems(username string, cookies string) ([]*entities.CollectionItem, error) {
-	collectionData, err := c.getCollectionData(username, cookies)
+	collectionPageData, err := c.getCollectionData(username, cookies)
 	if err != nil {
 		return nil, err
 	}
@@ -56,14 +58,22 @@ func (c *collectionDownloader) getCollectionItems(username string, cookies strin
 		"Referer":      fmt.Sprintf("https://bandcamp.com/%s", username),
 	}
 
+	fanId := collectionPageData.FanData.FanId
+	lastToken := collectionPageData.CollectionData.LastToken
+
+	if fanId == 0 || strings.TrimSpace(lastToken) == "" {
+		return nil, fmt.Errorf("invalid fan ID or last token")
+	}
+
 	var body = map[string]any{
-		"fan_id":           collectionData.FanData.FanId,
-		"older_than_token": collectionData.LastToken,
+		"fan_id":           fanId,
+		"older_than_token": lastToken,
 		"count":            100,
 	}
 
 	res, err := c.http.Post(url, headers, body)
 	if err != nil {
+		fmt.Printf("Error making POST request: %v\n", err)
 		return nil, err
 	}
 
@@ -74,20 +84,38 @@ func (c *collectionDownloader) getCollectionItems(username string, cookies strin
 		}
 	}()
 
+	// fmt.Println("POST request successful, parsing response...")
+	// fmt.Println("Request URL:", url)
+	// fmt.Println("Request Body:", body)
+	// fmt.Println("Response Status:", res.Status)
+	// fmt.Println("Response Headers:", res.Header)
+	// fmt.Println("Response Body:")
+
+	var bodyBytes []byte
+	bodyBytes, err = io.ReadAll(res.Body)
+	if err != nil {
+		fmt.Printf("Error reading response body: %v\n", err)
+		return nil, err
+	}
+	// fmt.Println(string(bodyBytes))
+
 	// parse json response
 	var data *entities.CollectionItemsData
-	err = json.NewDecoder(res.Body).Decode(&data)
+	err = json.Unmarshal(bodyBytes, &data)
 
 	if err != nil {
+		fmt.Printf("Error decoding JSON response: %v\n", err)
 		return nil, err
+	}
+
+	if (len(data.Items) == 0) || (len(data.RedownloadURLs) == 0) {
+		return nil, fmt.Errorf("no collection items found")
 	}
 
 	var items []*entities.CollectionItem
 	for _, item := range data.Items {
-		redownloadURL := data.RedownloadURLs[item.ID]
-		if redownloadURL == "" {
-			continue
-		}
+		index := "p" + strconv.Itoa(item.SaleID)
+		redownloadURL := data.RedownloadURLs[index]
 		collectionItem := &entities.CollectionItem{
 			Title:       item.Title,
 			ArtURL:      item.ArtURL,
@@ -105,6 +133,7 @@ func (c *collectionDownloader) Download(username string, cookies string) error {
 	if err != nil {
 		return err
 	}
+	fmt.Printf("Total collection items fetched: %d\n", len(collectionData))
 
 	// just print collection and return
 	var collectionUrls []string

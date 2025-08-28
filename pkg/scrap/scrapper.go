@@ -16,7 +16,7 @@ type Scrapper interface {
 	ListInfos(reader io.Reader) (*entities.TrackData, error)
 	ListWishlist(reader io.Reader) ([]*entities.Album, error)
 	ListCollection(reader io.Reader) ([]*entities.CollectionItem, error)
-	CollectionData(reader io.Reader) (*entities.CollectionData, error)
+	CollectionPage(reader io.Reader) (*entities.CollectionPage, error)
 }
 
 func NewScrapper() Scrapper {
@@ -132,21 +132,24 @@ func (s *dataScrapper) ListCollection(reader io.Reader) ([]*entities.CollectionI
 	return collectionItems, nil
 }
 
-func (s *dataScrapper) CollectionData(reader io.Reader) (*entities.CollectionData, error) {
+func (s *dataScrapper) CollectionPage(reader io.Reader) (*entities.CollectionPage, error) {
 	doc, newDocError := goquery.NewDocumentFromReader(reader)
 	if newDocError != nil {
 		return nil, newDocError
 	}
 
-	var pageData = &entities.CollectionData{}
+	var pageData = &entities.CollectionPage{}
 
 	p := doc.Find("#pagedata")
 	blob, exists := p.Attr("data-blob")
+
+	os.WriteFile("collection_blob.json", []byte(blob), 0644)
+
 	if !exists {
 		return nil, fmt.Errorf("error getting collection data")
 	}
 
-	jsonUnmarshalError := json.Unmarshal([]byte(blob), pageData)
+	jsonUnmarshalError := json.Unmarshal([]byte(blob), &pageData)
 	if jsonUnmarshalError != nil {
 		return nil, jsonUnmarshalError
 	}

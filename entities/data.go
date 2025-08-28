@@ -45,8 +45,12 @@ type (
 		FanId int `json:"fan_id"`
 	}
 
+	CollectionPage struct {
+		FanData        FanData        `json:"fan_data"`
+		CollectionData CollectionData `json:"collection_data"`
+	}
+
 	CollectionData struct {
-		FanData          FanData           `json:"fan_data"`
 		RedownloadURLs   map[string]string `json:"redownload_urls"`
 		LastToken        string            `json:"last_token"`
 		ItemCount        int               `json:"item_count"`
@@ -65,11 +69,12 @@ type (
 		Title  string `json:"item_title"`
 		ArtURL string `json:"item_art_url"`
 		URL    string `json:"item_url"`
+		SaleID int    `json:"sale_item_id"`
 	}
 
 	CollectionItemsData struct {
 		LastToken      string               `json:"last_token"`
-		RedownloadURLs map[int]string       `json:"redownload_urls"`
+		RedownloadURLs map[string]string    `json:"redownload_urls"`
 		Items          []CollectionItemData `json:"items"`
 	}
 
