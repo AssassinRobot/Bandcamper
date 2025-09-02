@@ -83,15 +83,15 @@ var collectionCmd = &cobra.Command{
 		log.Printf("Using cookies: %s\n", cookies)
 		log.Printf("Using email: %s\n", email)
 
-		err := collectionDownloader.DebugEmail()
-		if err != nil {
-			return err
-		}
-
-		// err := collectionDownloader.DownloadAll(username, cookies, email)
+		// err := collectionDownloader.DebugEmail()
 		// if err != nil {
 		// 	return err
 		// }
+
+		err := collectionDownloader.DownloadAll(username, cookies, email)
+		if err != nil {
+			return err
+		}
 
 		log.Println("Done")
 		return nil

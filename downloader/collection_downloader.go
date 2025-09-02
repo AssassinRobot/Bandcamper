@@ -253,9 +253,9 @@ func (c *collectionDownloader) Download(downloadURL string, cookies string, emai
 	}
 
 	fmt.Printf("Total download links found in email: %d\n", len(downloadLinks))
-	// for _, link := range downloadLinks {
-	// 	fmt.Printf("Download Link: %s\n", link)
-	// }
+	for _, link := range downloadLinks {
+		fmt.Printf("Download Link: %s\n", link)
+	}
 
 	close(errorChan)
 	return nil
